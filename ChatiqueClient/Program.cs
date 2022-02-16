@@ -28,7 +28,6 @@ namespace ChatiqueClient
                     }
                     ws.Send(String.Format("[{0}]: {1}", name, message));
                 }
-                Console.ReadKey(true);
             }
         }
     }
