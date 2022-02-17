@@ -11,7 +11,7 @@ namespace ChatiqueClient
             Console.WriteLine("state your name");
             name = Console.ReadLine();
 
-            using (var ws = new WebSocket(args.Length != 0 ? "ws://"+ args[0] +":8087/" : "ws://localhost:8087/"))
+            using (var ws = new WebSocket(args.Length != 0 ? "ws://" + args[0] + ":8087/" : "ws://localhost:8087/"))
             {
                 ws.OnMessage += (sender, e) =>
                     Console.WriteLine(e.Data);
@@ -26,7 +26,10 @@ namespace ChatiqueClient
                         Console.Write(new string(' ', Console.WindowWidth));
                         Console.SetCursorPosition(0, Console.CursorTop - 1);
                     }
-                    ws.Send(String.Format("[{0}]: {1}", name, message));
+                    ws.Send(String.Format("[{0}{1}]: {2}",
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        name,
+                        message));
                 }
             }
         }
