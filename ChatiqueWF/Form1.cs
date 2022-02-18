@@ -26,16 +26,52 @@ namespace ChatiqueWF
             InitializeComponent();
             InitializeSocket();
             richTextBox1.ReadOnly = true;
+            ActiveControl = textBox1;
         }
 
         private void InitializeSocket()
         {
-            socket = new WebSocket("ws://localhost:8087/");
+            string[] args = Program.Args;
+            socket = args.Length > 0
+                ? new WebSocket(String.Format("ws://{0}:{1}/", args[0], args[1]))
+                : new WebSocket("ws://localhost:8087/");
+
             socket.OnMessage += Socket_OnMessage;
+            socket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
             socket.Connect();
 
-            this.Name = String.Format("joined as: {0}", name);
+            this.Text = String.Format("joined as: {0}", name);
             _authForm.Hide();
+        }
+
+        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message)
+        {
+            destinationTextBox.Invoke(new Action(() => destinationTextBox.Text += String.Format("{0}{1}", message, Environment.NewLine)));
+            sourceTextBox.Invoke(new Action(() => sourceTextBox.Text = null));
+            ScrollDown();
+        }
+
+        private void ScrollDown()
+        {
+            richTextBox1.SelectionStart = richTextBox1.Text.Length - 1;
+            richTextBox1.ScrollToCaret();
+        }
+
+        bool SendMessage()
+        {
+            bool sent = false;
+            try
+            {
+                if (textBox1.Text != null || !String.IsNullOrWhiteSpace(textBox1.Text))
+                    socket.Send(textBox1.Text);
+                sent = true;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+                sent = false;
+            }
+            return sent;
         }
 
         private void Socket_OnMessage(object sender, MessageEventArgs e)
@@ -45,35 +81,20 @@ namespace ChatiqueWF
 
         private void button1_Click(object sender, EventArgs e)
         {
-            try
-            {
-                socket.Send(MakeMessage(textBox1.Text));
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception.Message);
-            }
-        }
-
-        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message)
-        {
-            destinationTextBox.Invoke(new Action(() => destinationTextBox.Text += String.Format("{0}{1}", message, Environment.NewLine)));
-            sourceTextBox.Invoke(new Action(() => sourceTextBox.Text = null));
-            
-        }
-
-        string MakeMessage(string message)
-        {
-            return String.Format("[{0}{1}]: {2}",
-                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                        name,
-                        message);
+            SendMessage();
         }
 
         private void ChatForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             socket.Close();
             _authForm.Close();
+        }
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //perhaps add shift+enter to add new line?
+            if (e.KeyCode == Keys.Enter)
+                SendMessage();
         }
     }
 }
