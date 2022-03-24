@@ -1,20 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using System.Data.SQLite;
+using System.IO;
 
 namespace Chatique
 {
-    public class Message
+    public class Post
     {
-        public Message(string message, string user)
+        public Post(string message, string user)
         {
-            Text = message;
+            Message = message;
             Username = user;
             Timestamp = DateTime.Now;
         }
+
+        public Post(DateTime timestamp, string user, string message)
+        {
+            Message = message;
+            Username = user;
+            Timestamp = timestamp;
+        }
+
         public DateTime Timestamp { get; }
-        public string Text { get; }
+        public string Message { get; }
         public string Username { get; }
 
         public override string ToString()
@@ -22,7 +33,7 @@ namespace Chatique
             return String.Format("[{0}]|{1}: {2}",
                         Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
                         Username,
-                        Text);
+                        Message);
         }
     }
 
@@ -56,35 +67,95 @@ namespace Chatique
         }
     }
 
-    public class Laputa : WebSocketBehavior
+    public class Vault
     {
-        bool credentialsNotReceived = true;
+        public static void Configure()
+        {
+            if (!File.Exists("database.sqlite3"))
+                SQLiteConnection.CreateFile("database.sqlite3");
+
+            using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
+            {
+                connection.Open();
+                string createTableQuery = 
+                    @"CREATE TABLE IF NOT EXISTS Posts
+                    (
+                        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Timestamp DATETIME,
+                        Message VARCHAR(255),
+                        Username VARCHAR(255)
+                    )";
+                using (SQLiteCommand createTable = new SQLiteCommand(createTableQuery, connection))
+                    createTable.ExecuteNonQuery();
+
+                connection.Close();
+            }
+        }
+
+        public static void AddMessageToDB(Post message)
+        {
+            using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
+            {
+                connection.Open();
+                string addMessageQuery = "INSERT INTO Posts ('Timestamp', 'Message', 'Username') VALUES(@a, @b, @c)";
+                using (SQLiteCommand addMessage = new SQLiteCommand(addMessageQuery, connection))
+                {
+                    addMessage.Parameters.AddWithValue("@a", message.Timestamp);
+                    addMessage.Parameters.AddWithValue("@b", message.Message);
+                    addMessage.Parameters.AddWithValue("@c", message.Username);
+                    addMessage.ExecuteNonQuery();
+                }
+                connection.Close();
+            }
+        }
+
+        public static List<Post> GetAllMessages()
+        {
+            var allPosts = new List<Post>();
+            using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
+            {
+                connection.Open();
+                string historyQuery = "SELECT Timestamp, Username, Message FROM Posts";
+                using (SQLiteCommand history = new SQLiteCommand(historyQuery, connection))
+                {
+                    var posts = history.ExecuteReader();
+                    if (posts.HasRows)
+                    {
+                        while (posts.Read())
+                            allPosts.Add(new Post(posts.GetDateTime(0), posts.GetString(1), posts.GetString(2)));
+                    }
+                }
+                connection.Close();
+            }
+            return allPosts;
+        }
+    }
+
+    public class Chat : WebSocketBehavior
+    {
         string userName;
+
+        void SaveMessage(Post message)
+        {
+            HistoryLog<Post>.AddMessageToHistory(message);
+            Vault.AddMessageToDB(message);
+        }
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            if (credentialsNotReceived && !Sessions[this.ID].Context.Headers["User-Agent"].Contains("websocket-sharp"))
-            {
-                userName = e.Data;
-                credentialsNotReceived = false;
-            }
-            else
-            {
-                var chatMessage = new Message(e.Data, userName);
-                HistoryLog<Message>.AddMessageToHistory(chatMessage);
-                Sessions.Broadcast(chatMessage.ToString());
-            }
+            var chatMessage = new Post(e.Data, userName);
+            SaveMessage(chatMessage);
+            Sessions.Broadcast(chatMessage.ToString());
         }
 
         protected override void OnOpen()
         {
             base.OnOpen();
-            Console.WriteLine("new connection");
-            //userName = Sessions[this.ID].Context.Headers["User-Agent"].Contains("websocket-sharp")
-            //    ? Sessions[this.ID].Context.CookieCollection["name"]?.Value
-            //    : Sessions[this.ID].Context.QueryString["name"];
             userName = Sessions[this.ID].Context.CookieCollection["name"]?.Value;
-            foreach (var item in HistoryLog<Message>.History)
+            Console.WriteLine("{0} : new connection, user name: {1}",Sessions[this.ID].StartTime, userName);
+            //foreach (var item in HistoryLog<Post>.History)
+            //    Send(item.ToString());
+            foreach (var item in Vault.GetAllMessages())
                 Send(item.ToString());
         }
     }
@@ -93,10 +164,12 @@ namespace Chatique
     {
         static void Main(string[] args)
         {
-            WebSocketServer wssv = args.Length > 0 
+            Vault.Configure();
+
+            WebSocketServer wssv = args.Length > 0
                 ? new WebSocketServer(Convert.ToInt32(args[0]))
                 : new WebSocketServer(8087);
-            wssv.AddWebSocketService<Laputa>("/");
+            wssv.AddWebSocketService<Chat>("/");
             wssv.Start();
             Console.ReadKey(true);
             wssv.Stop();

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using WebSocketSharp;
+using System.Text;
 
 namespace ChatiqueClient
 {
@@ -10,6 +11,8 @@ namespace ChatiqueClient
         static string name;
         static void Main(string[] args)
         {
+            Console.InputEncoding = Console.OutputEncoding = Encoding.Unicode;
+            
             Console.Write("state your name: ");
             name = Console.ReadLine();
 
