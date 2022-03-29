@@ -8,34 +8,51 @@ namespace ChatiqueClient
 {
     class Program
     {
-        static string name;
         static void Main(string[] args)
         {
             Console.InputEncoding = Console.OutputEncoding = Encoding.Unicode;
-            
-            Console.Write("state your name: ");
-            name = Console.ReadLine();
 
-            using (var ws = args.Length > 0
-                ? new WebSocket(String.Format("ws://{0}:{1}/", args[0], args[1]))
-                : new WebSocket("ws://localhost:8087/"))
+            string greeting = "what's your name: ";
+            Console.Write(greeting);
+
+            string name = Console.ReadLine();
+            while (String.IsNullOrWhiteSpace(name) && String.IsNullOrEmpty(name))
+            {
+                Console.SetCursorPosition(greeting.Length, 0);
+                name = Console.ReadLine();
+            }
+            Console.Clear();
+
+            string location = args.Length > 0
+                ? String.Format("ws://{0}:{1}/", args[0], args[1])
+                : "ws://localhost:8087/";
+
+            using (var ws = new WebSocket(location))
             {
                 ws.OnMessage += (sender, e) =>
                     Console.WriteLine(e.Data);
                 ws.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
                 ws.Connect();
+
+                Console.WriteLine("welcome!");
+
                 while (true)
                 {
                     var message = Console.ReadLine();
+
                     if (Console.CursorTop != 0)
-                    {
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                    }
+                        MoveCarriage();
+
                     ws.Send(message);
                 }
             }
+        }
+
+        static void MoveCarriage()
+        {
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
     }
 }

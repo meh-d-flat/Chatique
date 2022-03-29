@@ -55,16 +55,9 @@ namespace Chatique
             }
         }
 
-        public static int HistoryCount()
-        {
-            return history.Count;
-        }
+        public static int HistoryCount() => history.Count;
 
-        public static bool AddMessageToHistory(T message)
-        {
-            history.Add(message);
-            return true;
-        }
+        public static void AddMessageToHistory(T message) => history.Add(message);
     }
 
     public class Vault
@@ -77,7 +70,7 @@ namespace Chatique
             using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
             {
                 connection.Open();
-                string createTableQuery = 
+                string createTableQuery =
                     @"CREATE TABLE IF NOT EXISTS Posts
                     (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,23 +85,38 @@ namespace Chatique
             }
         }
 
-        public static void AddMessageToDB(Post message)
+        public static bool AddMessageToDB(Post message)
         {
+            bool commited;
             using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
             {
                 connection.Open();
                 string addMessageQuery = "INSERT INTO Posts ('Timestamp', 'Message', 'Username') VALUES(@a, @b, @c)";
-                using (SQLiteCommand addMessage = new SQLiteCommand(addMessageQuery, connection))
+                SQLiteCommand addMessage = new SQLiteCommand(addMessageQuery, connection);
+                addMessage.Parameters.AddWithValue("@a", message.Timestamp);
+                addMessage.Parameters.AddWithValue("@b", message.Message);
+                addMessage.Parameters.AddWithValue("@c", message.Username);
+                try
                 {
-                    addMessage.Parameters.AddWithValue("@a", message.Timestamp);
-                    addMessage.Parameters.AddWithValue("@b", message.Message);
-                    addMessage.Parameters.AddWithValue("@c", message.Username);
                     addMessage.ExecuteNonQuery();
+                    commited = true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    commited = false;
+                    addMessage.Transaction.Rollback();
+                }
+                finally
+                {
+                    addMessage.Dispose();
                 }
                 connection.Close();
             }
+            return commited;
         }
 
+        //add pagination
         public static List<Post> GetAllMessages()
         {
             var allPosts = new List<Post>();
@@ -138,7 +146,11 @@ namespace Chatique
         void SaveMessage(Post message)
         {
             HistoryLog<Post>.AddMessageToHistory(message);
-            Vault.AddMessageToDB(message);
+            var sent = Vault.AddMessageToDB(message);
+            if (!sent)
+            {
+                //check
+            }
         }
 
         protected override void OnMessage(MessageEventArgs e)

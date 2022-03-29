@@ -17,9 +17,12 @@ namespace ChatiqueWF
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void ConnectButtonClick(object sender, EventArgs e)
         {
-            var chatForm = new ChatForm(textBox1.Text, this);
+            if (String.IsNullOrEmpty(usernameTextBox.Text) || String.IsNullOrWhiteSpace(usernameTextBox.Text))
+                return;
+
+            var chatForm = new ChatForm(usernameTextBox.Text, this);
             //Application.Run(chatForm);
             chatForm.Show();
         }
