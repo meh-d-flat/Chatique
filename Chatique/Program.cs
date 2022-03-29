@@ -85,9 +85,9 @@ namespace Chatique
             }
         }
 
-        public static bool AddMessageToDB(Post message)
+        public static SQLiteException AddMessageToDB(Post message)
         {
-            bool commited;
+            SQLiteException sqlException = null;
             using (var connection = new SQLiteConnection("Data Source=database.sqlite3"))
             {
                 connection.Open();
@@ -99,12 +99,10 @@ namespace Chatique
                 try
                 {
                     addMessage.ExecuteNonQuery();
-                    commited = true;
                 }
-                catch (Exception ex)
+                catch (SQLiteException ex)
                 {
-                    Console.WriteLine(ex);
-                    commited = false;
+                    sqlException = ex;
                     addMessage.Transaction.Rollback();
                 }
                 finally
@@ -113,7 +111,7 @@ namespace Chatique
                 }
                 connection.Close();
             }
-            return commited;
+            return sqlException;
         }
 
         //add pagination
@@ -146,10 +144,11 @@ namespace Chatique
         void SaveMessage(Post message)
         {
             HistoryLog<Post>.AddMessageToHistory(message);
-            var sent = Vault.AddMessageToDB(message);
-            if (!sent)
+            var possibleError = Vault.AddMessageToDB(message);
+            if (possibleError != null)
             {
-                //check
+                Console.WriteLine("{0} | code - {1}in:\nname, sessionid,\n{2}, {3}\n{4}", possibleError.Message, possibleError.ResultCode, this.userName, this.ID, possibleError.StackTrace);
+                this.Error("an unexpected error occured while sending your message!", possibleError);
             }
         }
 

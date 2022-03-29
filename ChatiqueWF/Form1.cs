@@ -32,11 +32,14 @@ namespace ChatiqueWF
         private void InitializeSocket()
         {
             string[] args = Program.Args;
-            socket = args.Length > 0
-                ? new WebSocket(String.Format("ws://{0}:{1}/", args[0], args[1]))
-                : new WebSocket("ws://localhost:8087/");
+            string host = args.Length > 0
+                ? String.Format("ws://{0}:{1}/", args[0], args[1])
+                : "ws://localhost:8087/";
+
+            socket = new WebSocket(host);
 
             socket.OnMessage += Socket_OnMessage;
+            socket.OnError += Socket_OnError;
             socket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
             socket.Connect();
 
@@ -44,10 +47,19 @@ namespace ChatiqueWF
             _authForm.Hide();
         }
 
-        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message)
+        private void Socket_OnError(object sender, ErrorEventArgs e)
         {
+            string exception = String.Format("{0}\n{1}", e.Message, e.Exception.Message);
+            richTextBox1.Invoke(new Action(() => MessageReceived(null, richTextBox1, exception)));
+            ScrollDown();
+        }
+
+        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message, bool clear = false)
+        {
+            if(clear)
+                sourceTextBox.Invoke(new Action(() => sourceTextBox.Text = null));
+
             destinationTextBox.Invoke(new Action(() => destinationTextBox.Text += String.Format("{0}{1}", message, Environment.NewLine)));
-            sourceTextBox.Invoke(new Action(() => sourceTextBox.Text = null));
             ScrollDown();
         }
 
@@ -92,7 +104,6 @@ namespace ChatiqueWF
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            //perhaps add shift+enter to add new line?
             if (e.KeyCode == Keys.Enter)
                 SendMessage();
         }

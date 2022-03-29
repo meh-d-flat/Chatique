@@ -27,12 +27,12 @@ namespace ChatiqueClient
                 ? String.Format("ws://{0}:{1}/", args[0], args[1])
                 : "ws://localhost:8087/";
 
-            using (var ws = new WebSocket(location))
+            using (var webSocket = new WebSocket(location))
             {
-                ws.OnMessage += (sender, e) =>
-                    Console.WriteLine(e.Data);
-                ws.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
-                ws.Connect();
+                webSocket.OnMessage += (sender, e) => Console.WriteLine(e.Data);
+                webSocket.OnError += (sender, e) => Console.WriteLine("{0}\n{1}", e.Message, e.Exception.Message);
+                webSocket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
+                webSocket.Connect();
 
                 Console.WriteLine("welcome!");
 
@@ -43,7 +43,7 @@ namespace ChatiqueClient
                     if (Console.CursorTop != 0)
                         MoveCarriage();
 
-                    ws.Send(message);
+                    webSocket.Send(message);
                 }
             }
         }
