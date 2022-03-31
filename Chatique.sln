@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatiqueClient", "ChatiqueC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatiqueWF", "ChatiqueWF\ChatiqueWF.csproj", "{E9C082F2-5AAA-4B06-8B57-2BC05931160F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatiqueWebGateway", "ChatiqueWebGateway\ChatiqueWebGateway.csproj", "{AB12607B-7936-4919-BB0D-D35B4473F0DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
@@ -41,6 +43,14 @@ Global
 		{E9C082F2-5AAA-4B06-8B57-2BC05931160F}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{E9C082F2-5AAA-4B06-8B57-2BC05931160F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9C082F2-5AAA-4B06-8B57-2BC05931160F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB12607B-7936-4919-BB0D-D35B4473F0DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
