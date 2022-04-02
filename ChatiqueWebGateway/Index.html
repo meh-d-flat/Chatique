@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Chatique</title>
+    <style type="text/css">
+        #input {
+            width: 99%;
+        }
+
+        #chat {
+            overflow: auto;
+            max-height: 550px;
+            list-style: none;
+            padding: 0;
+        }
+
+        #chat li {
+            border-top: 1px solid #ccc;
+            margin: 0;
+            padding: 10px 0;
+        }
+
+        body {
+            font: normal 16px/20px Helvetica, sanf-serif;
+            background: rgb(237, 237, 236);
+            margin: 0;
+            margin-top: 40px;
+            padding: 0;
+        }
+
+        section, header {
+            display: block;
+        }
+
+        #wrapper {
+            width: 50%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 1px solid #fff;
+            padding-bottom: 16px;
+        }
+
+        header, article > * {
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <section id="wrapper">
+        <header>
+            <h1>Chatique</h1>
+            <p id="status">Disconnected</p>
+        </header>
+
+        <article>
+            <form onsubmit="sendMessage(); return false;">
+                <input type="text" id="input" placeholder="your message" />
+            </form>
+            <ul id="chat"></ul>
+        </article>
+
+        <script type="text/javascript">
+            var input = document.getElementById("input");
+            var chat = document.getElementById("chat");
+            var conStatus = document.getElementById("status");
+
+            window.addEventListener("load", onLoad, false);
+
+            function onLoad() {
+                window.websocket = new WebSocket("ws://" + window.location.hostname + ":8087/");
+                window.websocket.onopen = onOpen;
+                window.websocket.onmessage = onMessage;
+                window.websocket.onclose = onClose;
+                window.websocket.onerror = onError;
+            }
+
+            function onOpen(evt) {
+                conStatus.innerHTML = "Connected";
+            }
+
+            function onMessage(evt) {
+                chat.innerHTML = '<li class = "message">' + evt.data + "</li>" + chat.innerHTML;
+            }
+
+            function onClose(evt) {
+                conStatus.innerHTML = "Disconnected";
+            }
+
+            function onError(evt) {
+                conStatus.innerHTML = "Websocket error";
+            }
+
+            function sendMessage() {
+                var message = input.value;
+                window.websocket.send(message);
+                input.value = "";
+            }
+        </script>
+    </section>
+</body>
+
+</html>

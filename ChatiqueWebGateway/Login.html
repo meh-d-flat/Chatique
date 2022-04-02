@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Chatique</title>
+
+    <style>
+
+        body {
+            background: rgb(237, 237, 236);
+            font: normal 16px/20px Helvetica, sanf-serif;
+        }
+
+        input {
+            border-radius: 3px;
+        }
+
+        label {
+            font-family: Helvetica, sans-serif;
+        }
+
+        form {
+            width: 40%;
+            background-color: white;
+            margin-top: 20px;
+            border-radius: 7px;
+        }
+    </style>
+</head>
+
+<body>
+    <center>
+        <header>
+            <h1>Chatique</h1>
+            <p id="status">Log in</p>
+        </header>
+        <form action="/sup" method="post">
+            <div style="padding-top: 1em">
+                <label for="username">username</label>
+                <input autofocus id="username" name="username" type="text" />
+            </div>
+            <div style="margin-top: 10px">
+                <label for="password">password</label>
+                <input id="password" name="password" type="password" />
+            </div>
+            <button type="submit" class="btn btn-primary">login</button>
+        </form>
+    </center>
+</body>
+
+</html>

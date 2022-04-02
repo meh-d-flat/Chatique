@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ChatiqueWebGateway
 {
-    class CustomAuth
+    class CustomAuth : IAuth
     {
         public void Go()
         {
@@ -16,39 +16,40 @@ namespace ChatiqueWebGateway
 
                 while (true)
                 {
-                    var c = listener.GetContext();
+                    var context = listener.GetContext();
 
-                    if (!c.Request.TryGetRequestCookie("beenBefore"))
+                    if (!context.Request.TryGetRequestCookie("beenBefore"))
                     {
-                        c.Response.Cookies.Add(new Cookie("beenBefore", "true"));
-                        WriteResponse(c.Response, "*Login form*");
+                        context.Response.Cookies.Add(new Cookie("beenBefore", "true"));
+                        HtmlResponse(context.Response, "Login.html");
                     }
 
-                    if (c.Request.TryGetRequestCookie("authenticated"))
-                        WriteResponse(c.Response, "*Chatique page*");
+                    if (context.Request.TryGetRequestCookie("authenticated"))
+                        HtmlResponse(context.Response, "Index.html");
 
                     else
-                    {
-                        Console.WriteLine("is not authenticated");
-                        using (var reader = new StreamReader(c.Request.InputStream, c.Request.ContentEncoding))
-                        {
-                            var parsed = HttpUtility.ParseQueryString(reader.ReadToEnd());
+                        ProcessForm(context);
+                }
+            }
+        }
 
-                            if (parsed["username"] == null || parsed["username"] == String.Empty)
-                                WriteResponse(c.Response, "*Login form*");
+        void ProcessForm(HttpListenerContext ctx)
+        {
+            using (var reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
+            {
+                var parsed = HttpUtility.ParseQueryString(reader.ReadToEnd());
 
-                            else
-                            {
-                                var username = new Cookie("name", parsed["username"]);
-                                c.Response.Cookies.Add(new Cookie("authenticated", "true"));
-                                c.Response.Cookies.Add(username);
+                if (parsed["username"] == null || parsed["username"] == String.Empty)
+                    HtmlResponse(ctx.Response, "Login.html");
 
-                                c.Response.StatusCode = 303;
-                                c.Response.RedirectLocation = c.Request.Url.ToString();
-                                WriteResponse(c.Response, "Logging you in");
-                            }
-                        }
-                    }
+                else
+                {
+                    var username = new Cookie("name", parsed["username"]);
+                    ctx.Response.Cookies.Add(new Cookie("authenticated", "true"));
+                    ctx.Response.Cookies.Add(username);
+                    ctx.Response.StatusCode = 303;
+                    ctx.Response.RedirectLocation = ctx.Request.Url.ToString();
+                    WriteResponse(ctx.Response, "Logging you in");
                 }
             }
         }
@@ -57,6 +58,13 @@ namespace ChatiqueWebGateway
         {
             using (var writer = new StreamWriter(response.OutputStream))
                 writer.Write(text);
+        }
+
+        void HtmlResponse(HttpListenerResponse response, string htmlPath)
+        {
+            var html = File.ReadAllText(htmlPath);
+            using (var writer = new StreamWriter(response.OutputStream))
+                writer.Write(html);
         }
     }
 }
