@@ -11,32 +11,39 @@ namespace ChatiqueWebGateway
     {
         public void Go()
         {
-            while (true)
+            using (HttpListener listener = new HttpListener())
             {
-                using (HttpListener listener = new HttpListener())
-                {
-                    listener.Prefixes.Add(@"http://+:9090/sup/");
-                    listener.AuthenticationSchemes = AuthenticationSchemes.Basic;
-                    listener.Start();
+                listener.Prefixes.Add(@"http://+:9090/sup/");
+                listener.AuthenticationSchemes = AuthenticationSchemes.Basic;
+                listener.Start();
 
+                while (true)
+                {
                     var c = listener.GetContext();
                     var user = (HttpListenerBasicIdentity)c.User.Identity;
 
                     if (String.IsNullOrEmpty(user.Name) || String.IsNullOrWhiteSpace(user.Name))
-                    {
-                        c.Response.StatusCode = 401;
-                        c.Response.AppendCookie(new Cookie("auth", "pending"));
-                        Ext.WriteResponse(c.Response, "Login failure.\nIf you see this then refresh the page to try again.");
-                    }
+                        Unauthorized(c.Response);
+
                     else
                     {
-                        c.Response.AppendCookie(new Cookie("auth", "passed"));
-                        c.Response.Cookies.Add(new Cookie("name", user.Name));
-                        c.Request.Headers["Authorization"] = "";
-                        Ext.HtmlResponse(c.Response, "Index.html");
+                        if (Chatique.Vault.CheckCredentialHashing(user.Name, user.Password))
+                        {
+                            c.Response.Cookies.Add(new Cookie("name", user.Name));
+                            Extensions.HtmlResponse(c.Response, "Index.html");
+                        }
+
+                        Unauthorized(c.Response);
                     }
                 }
             }
+
+        }
+
+        public void Unauthorized(HttpListenerResponse response)
+        {
+            response.StatusCode = 401;
+            Extensions.WriteResponse(response, "Login failure.\nIf you see this then refresh the page to try again.");
         }
     }
 }

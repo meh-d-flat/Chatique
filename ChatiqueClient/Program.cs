@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using WebSocketSharp;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace ChatiqueClient
 {
@@ -21,6 +22,19 @@ namespace ChatiqueClient
                 Console.SetCursorPosition(greeting.Length, 0);
                 name = Console.ReadLine();
             }
+            string password = Console.ReadLine();
+            while (String.IsNullOrWhiteSpace(password) && String.IsNullOrEmpty(password))
+            {
+                Console.SetCursorPosition(greeting.Length, 0);
+                password = Console.ReadLine();
+
+                using (SHA512 sha = SHA512Managed.Create())
+                {
+                    password = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(password)));
+                    password = password.Replace("-", "");
+                    password = password.ToLower();
+                }
+            }
             Console.Clear();
 
             string location = args.Length > 0
@@ -30,8 +44,9 @@ namespace ChatiqueClient
             using (var webSocket = new WebSocket(location))
             {
                 webSocket.OnMessage += (sender, e) => Console.WriteLine(e.Data);
-                webSocket.OnError += (sender, e) => Console.WriteLine("{0}\n{1}", e.Message, e.Exception.Message);
+                webSocket.OnError += WebSocket_OnError; ;
                 webSocket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
+                webSocket.SetCookie(new WebSocketSharp.Net.Cookie("password", password));
                 webSocket.Connect();
 
                 Console.WriteLine("welcome!");
@@ -46,6 +61,15 @@ namespace ChatiqueClient
                     webSocket.Send(message);
                 }
             }
+        }
+
+        private static void WebSocket_OnError(object sender, ErrorEventArgs e)
+        {
+            if (e.Exception is AccessViolationException)
+            {
+                //re-prompt to login
+            }
+            Console.WriteLine("{0}\n{1}", e.Message, e.Exception.Message);
         }
 
         static void MoveCarriage()

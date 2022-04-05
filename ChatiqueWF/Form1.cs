@@ -19,17 +19,18 @@ namespace ChatiqueWF
 
         string name;
 
-        public ChatForm(string clientName, AuthForm authForm)
+        public ChatForm(string clientName, string password, AuthForm authForm)
         {
             name = clientName;
             _authForm = authForm;
             InitializeComponent();
-            InitializeSocket();
+            InitializeSocket(clientName, password);
             richTextBox1.ReadOnly = true;
             ActiveControl = textBox1;
+            _authForm.Hide();
         }
 
-        private void InitializeSocket()
+        private void InitializeSocket(string name, string password)
         {
             string[] args = Program.Args;
             string host = args.Length > 0
@@ -41,14 +42,19 @@ namespace ChatiqueWF
             socket.OnMessage += Socket_OnMessage;
             socket.OnError += Socket_OnError;
             socket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
+            socket.SetCookie(new WebSocketSharp.Net.Cookie("password", password));
             socket.Connect();
 
             this.Text = String.Format("joined as: {0}", name);
-            _authForm.Hide();
+            //_authForm.Hide();
         }
 
         private void Socket_OnError(object sender, ErrorEventArgs e)
         {
+            if (e.Exception is AccessViolationException)
+            {
+                //form shuts down, auth form shows up with error
+            }
             string exception = String.Format("{0}\n{1}", e.Message, e.Exception.Message);
             richTextBox1.Invoke(new Action(() => MessageReceived(null, richTextBox1, exception)));
             ScrollDown();

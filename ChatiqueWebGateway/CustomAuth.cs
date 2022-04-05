@@ -21,11 +21,11 @@ namespace ChatiqueWebGateway
                     if (!context.Request.TryGetRequestCookie("beenBefore"))
                     {
                         context.Response.Cookies.Add(new Cookie("beenBefore", "true"));
-                        Ext.HtmlResponse(context.Response, "Login.html");
+                        Extensions.HtmlResponse(context.Response, "Login.html");
                     }
 
                     if (context.Request.TryGetRequestCookie("authenticated"))
-                        Ext.HtmlResponse(context.Response, "Index.html");
+                        Extensions.HtmlResponse(context.Response, "Index.html");
 
                     else
                         ProcessForm(context);
@@ -40,16 +40,21 @@ namespace ChatiqueWebGateway
                 var parsed = HttpUtility.ParseQueryString(reader.ReadToEnd());
 
                 if (parsed["username"] == null || parsed["username"] == String.Empty)
-                    Ext.HtmlResponse(ctx.Response, "Login.html");
+                    Extensions.HtmlResponse(ctx.Response, "Login.html");
 
                 else
                 {
-                    var username = new Cookie("name", parsed["username"]);
-                    ctx.Response.Cookies.Add(new Cookie("authenticated", "true"));
-                    ctx.Response.Cookies.Add(username);
-                    ctx.Response.StatusCode = 303;
-                    ctx.Response.RedirectLocation = ctx.Request.Url.ToString();
-                    Ext.WriteResponse(ctx.Response, "Logging you in");
+                    if (Chatique.Vault.CheckCredentialHashing(parsed["username"], parsed["password"]))
+                    {
+                        var username = new Cookie("name", parsed["username"]);
+                        ctx.Response.Cookies.Add(new Cookie("authenticated", "true"));
+                        ctx.Response.Cookies.Add(username);
+                        ctx.Response.StatusCode = 303;
+                        ctx.Response.RedirectLocation = ctx.Request.Url.ToString();
+                        Extensions.WriteResponse(ctx.Response, "Logging you in");
+                    }
+
+                    Extensions.HtmlResponse(ctx.Response, "Login.html");
                 }
             }
         }

@@ -53,8 +53,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chat.cs" />
+    <Compile Include="HistoryLog.cs" />
+    <Compile Include="Post.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Vault.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
