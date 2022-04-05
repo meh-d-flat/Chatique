@@ -20,25 +20,20 @@ namespace ChatiqueWebGateway
                     listener.Start();
 
                     var c = listener.GetContext();
-                    var user = c.User.Identity;
-
-                    if (c.Request.TryGetRequestCookie("auth"))
-                        Console.WriteLine("cookie: {0}", c.Request.Cookies["auth"].Value);
+                    var user = (HttpListenerBasicIdentity)c.User.Identity;
 
                     if (String.IsNullOrEmpty(user.Name) || String.IsNullOrWhiteSpace(user.Name))
                     {
                         c.Response.StatusCode = 401;
                         c.Response.AppendCookie(new Cookie("auth", "pending"));
-                        using (var writer = new StreamWriter(c.Response.OutputStream))
-                            writer.Write("Login failure.\nIf you see this then refresh the page to try again.");
+                        Ext.WriteResponse(c.Response, "Login failure.\nIf you see this then refresh the page to try again.");
                     }
                     else
                     {
                         c.Response.AppendCookie(new Cookie("auth", "passed"));
                         c.Response.Cookies.Add(new Cookie("name", user.Name));
                         c.Request.Headers["Authorization"] = "";
-                        using (var writer = new StreamWriter(c.Response.OutputStream))
-                            writer.Write("You're logged in, welcome!");
+                        Ext.HtmlResponse(c.Response, "Index.html");
                     }
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.IO;
 
 namespace ChatiqueWebGateway
 {
@@ -60,6 +61,19 @@ namespace ChatiqueWebGateway
                 exists = false;
             }
             return exists;
+        }
+
+        public static void WriteResponse(HttpListenerResponse response, string text)
+        {
+            using (var writer = new StreamWriter(response.OutputStream))
+                writer.Write(text);
+        }
+
+        public static void HtmlResponse(HttpListenerResponse response, string htmlPath)
+        {
+            var html = File.ReadAllText(htmlPath);
+            using (var writer = new StreamWriter(response.OutputStream))
+                writer.Write(html);
         }
     }
 }

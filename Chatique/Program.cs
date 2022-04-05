@@ -77,6 +77,12 @@ namespace Chatique
                         Timestamp DATETIME,
                         Message VARCHAR(255),
                         Username VARCHAR(255)
+                    );
+                    CREATE TABLE IF NOT EXISTS Users
+                    (
+                        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Username VARCHAR(255) NOT NULL,
+                        Password VARCHAR(255) NOT NULL
                     )";
                 using (SQLiteCommand createTable = new SQLiteCommand(createTableQuery, connection))
                     createTable.ExecuteNonQuery();

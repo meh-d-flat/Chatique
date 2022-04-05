@@ -21,11 +21,11 @@ namespace ChatiqueWebGateway
                     if (!context.Request.TryGetRequestCookie("beenBefore"))
                     {
                         context.Response.Cookies.Add(new Cookie("beenBefore", "true"));
-                        HtmlResponse(context.Response, "Login.html");
+                        Ext.HtmlResponse(context.Response, "Login.html");
                     }
 
                     if (context.Request.TryGetRequestCookie("authenticated"))
-                        HtmlResponse(context.Response, "Index.html");
+                        Ext.HtmlResponse(context.Response, "Index.html");
 
                     else
                         ProcessForm(context);
@@ -40,7 +40,7 @@ namespace ChatiqueWebGateway
                 var parsed = HttpUtility.ParseQueryString(reader.ReadToEnd());
 
                 if (parsed["username"] == null || parsed["username"] == String.Empty)
-                    HtmlResponse(ctx.Response, "Login.html");
+                    Ext.HtmlResponse(ctx.Response, "Login.html");
 
                 else
                 {
@@ -49,22 +49,9 @@ namespace ChatiqueWebGateway
                     ctx.Response.Cookies.Add(username);
                     ctx.Response.StatusCode = 303;
                     ctx.Response.RedirectLocation = ctx.Request.Url.ToString();
-                    WriteResponse(ctx.Response, "Logging you in");
+                    Ext.WriteResponse(ctx.Response, "Logging you in");
                 }
             }
-        }
-
-        void WriteResponse(HttpListenerResponse response, string text)
-        {
-            using (var writer = new StreamWriter(response.OutputStream))
-                writer.Write(text);
-        }
-
-        void HtmlResponse(HttpListenerResponse response, string htmlPath)
-        {
-            var html = File.ReadAllText(htmlPath);
-            using (var writer = new StreamWriter(response.OutputStream))
-                writer.Write(html);
         }
     }
 }
