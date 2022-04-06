@@ -24,7 +24,7 @@ namespace Chatique
 
         public override string ToString()
         {
-            return String.Format("[{0}]|{1}: {2}",
+            return String.Format("[{0}] {1}: {2}",
                         Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
                         Username,
                         Message);

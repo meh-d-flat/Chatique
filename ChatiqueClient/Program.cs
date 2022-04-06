@@ -9,66 +9,106 @@ namespace ChatiqueClient
 {
     class Program
     {
+        static string name, password = "";
+
+        static string[] commands;
+
         static void Main(string[] args)
         {
+            commands = args;
             Console.InputEncoding = Console.OutputEncoding = Encoding.Unicode;
+            Chat();
+        }
 
+        private static void Chat()
+        {
+            Login();
+            InitWebSocket();
+        }
+
+        static void Login()
+        {
             string greeting = "what's your name: ";
-            Console.Write(greeting);
+            string askPass = "password: ";
 
-            string name = Console.ReadLine();
+            Console.Write(greeting);
+            name = Console.ReadLine();
             while (String.IsNullOrWhiteSpace(name) && String.IsNullOrEmpty(name))
             {
                 Console.SetCursorPosition(greeting.Length, 0);
                 name = Console.ReadLine();
             }
-            string password = Console.ReadLine();
+
+            Console.WriteLine(askPass);
+            password = Console.ReadLine();
             while (String.IsNullOrWhiteSpace(password) && String.IsNullOrEmpty(password))
             {
-                Console.SetCursorPosition(greeting.Length, 0);
+                Console.SetCursorPosition(askPass.Length, 0);
                 password = Console.ReadLine();
-
-                using (SHA512 sha = SHA512Managed.Create())
-                {
-                    password = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(password)));
-                    password = password.Replace("-", "");
-                    password = password.ToLower();
-                }
+            }
+            using (SHA512 sha = SHA512Managed.Create())
+            {
+                password = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(password)));
+                password = password.Replace("-", "");
+                password = password.ToLower();
             }
             Console.Clear();
+        }
 
-            string location = args.Length > 0
-                ? String.Format("ws://{0}:{1}/", args[0], args[1])
+        private static void InitWebSocket()
+        {
+            string location = commands.Length > 0
+                ? String.Format("ws://{0}:{1}/", commands[0], commands[1])
                 : "ws://localhost:8087/";
 
             using (var webSocket = new WebSocket(location))
             {
-                webSocket.OnMessage += (sender, e) => Console.WriteLine(e.Data);
-                webSocket.OnError += WebSocket_OnError; ;
                 webSocket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
                 webSocket.SetCookie(new WebSocketSharp.Net.Cookie("password", password));
+                webSocket.OnMessage += Received;
+                webSocket.OnError += Error;
+                webSocket.OnClose += Close;
                 webSocket.Connect();
-
-                Console.WriteLine("welcome!");
-
-                while (true)
+                if (webSocket.IsAlive)
                 {
-                    var message = Console.ReadLine();
+                    while (true)
+                    {
+                        var message = Console.ReadLine();
 
-                    if (Console.CursorTop != 0)
-                        MoveCarriage();
+                        if (Console.CursorTop != 0)
+                            MoveCarriage();
 
-                    webSocket.Send(message);
+                        if (webSocket.ReadyState == WebSocketState.Open)
+                            webSocket.Send(message);
+                        else
+                        {
+                            webSocket.OnMessage -= Received;
+                            webSocket.OnError -= Error;
+                            webSocket.OnClose -= Close;
+                            break;
+                        }
+
+                    }
                 }
             }
+
+            return;
         }
 
-        private static void WebSocket_OnError(object sender, ErrorEventArgs e)
+        private static void Received(object sender, MessageEventArgs e)
         {
-            if (e.Exception is AccessViolationException)
-            {
-                //re-prompt to login
-            }
+            Console.WriteLine(e.Data);
+        }
+
+        private static void Close(object sender, CloseEventArgs e)
+        {
+            Console.WriteLine(e.Reason);
+            Console.WriteLine("wait for reconnect and try again");
+            Chat();
+        }
+
+        private static void Error(object sender, ErrorEventArgs e)
+        {
             Console.WriteLine("{0}\n{1}", e.Message, e.Exception.Message);
         }
 

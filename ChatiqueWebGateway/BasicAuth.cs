@@ -30,6 +30,7 @@ namespace ChatiqueWebGateway
                         if (Chatique.Vault.CheckCredentialHashing(user.Name, user.Password))
                         {
                             c.Response.Cookies.Add(new Cookie("name", user.Name));
+                            c.Response.Cookies.Add(new Cookie("authenticated", "true"));
                             Extensions.HtmlResponse(c.Response, "Index.html");
                         }
 

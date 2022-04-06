@@ -91,11 +91,5 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Chatique\Chatique.csproj">
-      <Project>{fa409046-8159-4356-be8d-a89bc8d10009}</Project>
-      <Name>Chatique</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

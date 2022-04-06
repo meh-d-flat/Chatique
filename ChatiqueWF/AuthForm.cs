@@ -40,9 +40,9 @@ namespace ChatiqueWF
                 password = password.ToLower();
             }
 
+            var chatForm = new ChatForm(usernameTextBox.Text, password, this);
             passwordTextBox.Invoke(new Action(() => passwordTextBox.Text = String.Empty));
             usernameTextBox.Invoke(new Action(() => usernameTextBox.Text = String.Empty));
-            var chatForm = new ChatForm(usernameTextBox.Text, password, this);
             //Application.Run(chatForm);
             chatForm.Show();
 

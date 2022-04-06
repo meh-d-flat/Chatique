@@ -27,7 +27,7 @@ namespace ChatiqueWF
             InitializeSocket(clientName, password);
             richTextBox1.ReadOnly = true;
             ActiveControl = textBox1;
-            _authForm.Hide();
+            //_authForm.Hide();
         }
 
         private void InitializeSocket(string name, string password)
@@ -41,26 +41,33 @@ namespace ChatiqueWF
 
             socket.OnMessage += Socket_OnMessage;
             socket.OnError += Socket_OnError;
+            socket.OnClose += Socket_OnClose;
             socket.SetCookie(new WebSocketSharp.Net.Cookie("name", name));
             socket.SetCookie(new WebSocketSharp.Net.Cookie("password", password));
             socket.Connect();
 
             this.Text = String.Format("joined as: {0}", name);
-            //_authForm.Hide();
+            _authForm.Hide();
+        }
+
+        private void Socket_OnClose(object sender, CloseEventArgs e)
+        {
+            if (e.Code == 1011 && e.Reason.Contains("incorrect"))
+            {
+                MessageBox.Show(e.Reason);
+                this.Invoke(new Action(() => this.Hide()));
+                _authForm.Invoke(new Action(() => _authForm.Show()));
+            }
         }
 
         private void Socket_OnError(object sender, ErrorEventArgs e)
         {
-            if (e.Exception is AccessViolationException)
-            {
-                //form shuts down, auth form shows up with error
-            }
             string exception = String.Format("{0}\n{1}", e.Message, e.Exception.Message);
-            richTextBox1.Invoke(new Action(() => MessageReceived(null, richTextBox1, exception)));
+            richTextBox1.Invoke(new Action(() => MessageReceived(null, richTextBox1, exception, true)));
             ScrollDown();
         }
 
-        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message, bool clear = false)
+        void MessageReceived(TextBoxBase sourceTextBox, TextBoxBase destinationTextBox, string message, bool clear)
         {
             if(clear)
                 sourceTextBox.Invoke(new Action(() => sourceTextBox.Text = null));
@@ -94,7 +101,7 @@ namespace ChatiqueWF
 
         private void Socket_OnMessage(object sender, MessageEventArgs e)
         {
-            richTextBox1.Invoke(new Action(() => MessageReceived(textBox1, richTextBox1, e.Data)));
+            richTextBox1.Invoke(new Action(() => MessageReceived(textBox1, richTextBox1, e.Data, false)));
         }
 
         private void button1_Click(object sender, EventArgs e)

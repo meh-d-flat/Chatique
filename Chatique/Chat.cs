@@ -28,20 +28,25 @@ namespace Chatique
 
         protected override void OnOpen()
         {
+            base.OnOpen();
             userName = Sessions[this.ID].Context.CookieCollection["name"]?.Value;
             var password = Sessions[this.ID].Context.CookieCollection["password"]?.Value;
-            if (!Vault.CheckCredential(userName, password))
+            if (!Vault.CheckCredential(userName, password) && this.Context.CookieCollection["authenticated"]?.Value != "true")
             {
-                //this websocket's exception i can't instantiate and i know that this choice of exception is not even near correct
-                Error("authentication failed!\nplease try again", new AccessViolationException());
+                this.Context.WebSocket.Close(CloseStatusCode.ServerError, "incorrect username or password!");
                 return;
             }
-            base.OnOpen();
             Console.WriteLine("{0} : new connection, user name: {1}", Sessions[this.ID].StartTime, userName);
             //foreach (var item in HistoryLog<Post>.History)
             //    Send(item.ToString());
             foreach (var item in Vault.GetAllMessages())
                 Send(item.ToString());
+        }
+
+        protected override void OnClose(CloseEventArgs e)
+        {
+            base.OnClose(e);
+            Console.WriteLine(e.Reason);
         }
     }
 }

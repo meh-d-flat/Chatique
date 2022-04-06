@@ -88,12 +88,15 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.passwordTextBox.Location = new System.Drawing.Point(74, 46);
             this.passwordTextBox.Name = "passwordTextBox";
+            this.passwordTextBox.PasswordChar = '●';
             this.passwordTextBox.Size = new System.Drawing.Size(194, 20);
             this.passwordTextBox.TabIndex = 4;
+            this.passwordTextBox.UseSystemPasswordChar = true;
             // 
             // loginStatusLabel
             // 
             this.loginStatusLabel.AutoSize = true;
+            this.loginStatusLabel.ForeColor = System.Drawing.Color.Red;
             this.loginStatusLabel.Location = new System.Drawing.Point(12, 9);
             this.loginStatusLabel.Name = "loginStatusLabel";
             this.loginStatusLabel.Size = new System.Drawing.Size(0, 13);
