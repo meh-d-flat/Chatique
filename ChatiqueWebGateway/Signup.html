@@ -33,30 +33,27 @@
     <center>
         <header>
             <h1>Chatique</h1>
-            <p id="status">Log in</p>
+            <p id="status">Sign up</p>
         </header>
         <form action="/sup" method="post">
             <div style="padding-top: 1em">
-                <label for="username">username</label>
-                <input autofocus id="username" name="username" type="text" required/>
+                <label for="username"> username</label>
+                <input autofocus id="username" name="username" type="text" required />
             </div>
             <div style="margin-top: 10px">
                 <label for="password">password</label>
-                <input id="password" name="password" type="password" required/>
+                <input id="password" name="password" type="password" required />
             </div>
-            <button type="submit" class="btn btn-primary">login</button>
+            <div style="margin-top: 10px">
+                <label for="repeat-password">repeat password</label>
+                <input id="repeat-password" name="repeat-password" type="password" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Sign up!</button>
         </form>
-        <button onclick="signUp()">Sign up</button>
-
-
     </center>
     <script>
-        function signUp() {
-            document.cookie = "signup=true;max-age=5";
-            location.reload();
-        }
+        //password and username validation
     </script>
-
 </body>
 
 </html>
