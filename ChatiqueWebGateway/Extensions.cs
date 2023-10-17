@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ChatiqueWebGateway
 {
@@ -49,17 +50,17 @@ namespace ChatiqueWebGateway
             return exists;
         }
 
-        public static void WriteResponse(HttpListenerResponse response, string text)
+        public static async Task WriteResponse(HttpListenerResponse response, string text)
         {
             using (var writer = new StreamWriter(response.OutputStream))
-                writer.Write(text);
+                await writer.WriteAsync(text);
         }
 
-        public static void HtmlResponse(HttpListenerResponse response, string htmlPath)
+        public static async Task HtmlResponse(HttpListenerResponse response, string htmlPath)
         {
             var html = File.ReadAllText(htmlPath);
             using (var writer = new StreamWriter(response.OutputStream))
-                writer.Write(html);
+                await writer.WriteAsync(html);
         }
     }
 }

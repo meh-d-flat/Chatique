@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 //netsh http add urlacl url=http://+:9090/ user=Everyone
 //netsh http show urlacl
@@ -9,7 +10,7 @@ namespace ChatiqueWebGateway
 {
     class BasicAuth : IAuth
     {
-        public void Go()
+        public async Task GoAsync()
         {
             using (HttpListener listener = new HttpListener())
             {
@@ -19,11 +20,11 @@ namespace ChatiqueWebGateway
 
                 while (true)
                 {
-                    var c = listener.GetContext();
+                    var c = await listener.GetContextAsync();
                     var user = (HttpListenerBasicIdentity)c.User.Identity;
 
                     if (String.IsNullOrEmpty(user.Name) || String.IsNullOrWhiteSpace(user.Name))
-                        Unauthorized(c.Response);
+                        await Unauthorized(c.Response);
 
                     else
                     {
@@ -31,20 +32,25 @@ namespace ChatiqueWebGateway
                         {
                             c.Response.Cookies.Add(new Cookie("name", user.Name));
                             c.Response.Cookies.Add(new Cookie("authenticated", "true"));
-                            Extensions.HtmlResponse(c.Response, "Index.html");
+                            await Extensions.HtmlResponse(c.Response, "Index.html");
                         }
 
-                        Unauthorized(c.Response);
+                        await Unauthorized(c.Response);
                     }
                 }
             }
 
         }
 
-        public void Unauthorized(HttpListenerResponse response)
+        public async Task Unauthorized(HttpListenerResponse response)
         {
             response.StatusCode = 401;
-            Extensions.WriteResponse(response, "Login failure.\nIf you see this then refresh the page to try again.");
+            await Extensions.WriteResponse(response, "Login failure.\nIf you see this then refresh the page to try again.");
+        }
+
+        public void Go()
+        {
+            throw new NotImplementedException();
         }
     }
 }

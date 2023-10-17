@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace ChatiqueWebGateway
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Run(new CustomAuth());
+            await Run(new CustomAuth());
         }
 
-        static void Run(IAuth listener)
+        static async Task Run(IAuth listener)
         {
             Console.WriteLine("Gateway's listening on: {0}", Extensions.MyIP());
-            listener.Go();
+            await listener.GoAsync();
         }
     }
 }
